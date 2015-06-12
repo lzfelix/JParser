@@ -20,8 +20,11 @@ public class Parser {
 			
 			//TODO: interpret variables
 			
-			if (current instanceof NumericToken || current instanceof FunctionToken)
+			if (current instanceof NumericToken) 
 				output.add(current);
+			
+			else if (current instanceof FunctionToken)
+				operatorsStack.add(current);
 			
 			else if (current.getType() == Token.Type.LPAR)
 				operatorsStack.push(current);
@@ -83,11 +86,12 @@ public class Parser {
 		return buffer.toString().substring(0, buffer.length() - 1);
 	}
 	
+	//There is a problem with functions!
 	public static void main(String args[]) {
 		Parser p;
 		
 		try {
-			p = new Parser("1/(1+2)");
+			p = new Parser("sin(cos(10+3/2))");
 			System.out.println(p.toString());
 		} catch (ParserException e) {
 			e.printStackTrace();
