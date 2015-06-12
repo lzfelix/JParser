@@ -1,19 +1,19 @@
 package tests;
 
 import static org.junit.Assert.*;
+import lexer.Lexer;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class ParserTests {
+	Lexer l;
 
-	@Before
-	public void setUp() throws Exception {
-	}
 
-	@Test
-	public void test() {
-		fail("Not yet implemented");
+	@Test 
+	public void testSingleDigit() {
+		l = new Lexer("cos(x)^2 + sin(x)^2 - 1");
+		System.out.println(l.toString());
 	}
 
 }
