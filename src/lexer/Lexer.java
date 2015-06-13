@@ -1,9 +1,11 @@
 package lexer;
 
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.List;
 
 import lexer.FunctionToken.FunctionID;
+import exceptions.LexerException;
+import exceptions.ParserException;
 
 public class Lexer {
 	private static final char ADD = '+';
@@ -15,12 +17,28 @@ public class Lexer {
 	private static final char COM = ',';
 	private static final char RPAR = ')';
 	
-	private Queue<Token> tokens;
+	private List<Token> tokens;
+	private static Lexer instance = null;
 	
-	public Lexer(String expression) throws ParserException {
-		tokens = new LinkedList<Token>();
+	private Lexer() {
+		tokens = new LinkedList<>();
+	}
+	
+	/**
+	 * Retuns the Lexer's instance, since this is a Singleton class.
+	 * @return a Lexer's instance.
+	 */
+	public static Lexer getInstance() {
+		if (instance == null)
+			instance = new Lexer();
 		
+		return instance;
+	}
+	
+	public void parseToTokens(String expression) throws LexerException {
+		//resets from previous lexing
 		int pos = -1;
+		tokens.clear();
 		
 		//strips spaces and transform the expression into lower case
 		expression = expression.replaceAll("\\s", "").toLowerCase();
@@ -36,18 +54,18 @@ public class Lexer {
 				continue;
 			}
 			
-			//Same for a number
-			newPos = tryParseNumber(expression, pos, tokens);
-			if (newPos != pos) {
-				pos = newPos - 1;
-				continue;
-			}
-			
-
 			switch (digit) {
 				//treating operators case
 				case ADD: tokens.add(new Token(Token.Type.ADD)); continue;
-				case SUB: tokens.add(new Token(Token.Type.SUB)); continue;
+				
+				//this can be either a negative sign or subtraction operator
+				case SUB:
+					if (tokens.size() == 0 || Token.willNegate(tokens.get(tokens.size() - 1)))
+						tokens.add(new Token(Token.Type.NEG));
+					else
+						tokens.add(new Token(Token.Type.SUB)); 
+				continue;
+					
 				case MUL: tokens.add(new Token(Token.Type.MUL)); continue;
 				case DIV: tokens.add(new Token(Token.Type.DIV)); continue;
 				case POW: tokens.add(new Token(Token.Type.POW)); continue;
@@ -58,8 +76,15 @@ public class Lexer {
 				case RPAR: tokens.add(new Token(Token.Type.RPAR)); continue;
 			}
 			
+			//Same for a number
+			newPos = tryParseNumber(expression, pos, tokens);
+			if (newPos != pos) {
+				pos = newPos - 1;
+				continue;
+			}
+			
 			//if we got here, then there is something wrong with this expression
-			throw new ParserException("Expression malformed arround position " + pos + ".");
+			throw new LexerException("Expression malformed arround position " + pos + ".");
 		}
 	}
 	
@@ -71,7 +96,7 @@ public class Lexer {
 	 * @return the new seek position. If the returned value is equals to the
 	 * passed as <code>pos</code> then no text was parsed.
 	 */
-	private int tryParseText(String expression, int pos, Queue<Token> tokens) {
+	private int tryParseText(String expression, int pos, List<Token> tokens) {
 		StringBuilder buffer = new StringBuilder();
 		boolean isText = false;
 		char digit = expression.charAt(pos);
@@ -89,9 +114,17 @@ public class Lexer {
 			FunctionID fID = FunctionToken.isFunction(text);
 			
 			if (fID != null)
-				tokens.add(new FunctionToken(Token.Type.FUN, fID));
-			else
-				tokens.add(new VarToken(Token.Type.VAR, text));
+				tokens.add(new FunctionToken(fID));
+			else {
+				//add constants here...
+				
+				if (text.equals("e"))
+					tokens.add(new NumericToken(Math.E));
+				else if (text.equals("pi"))
+					tokens.add(new NumericToken(Math.PI));
+				else
+					tokens.add(new VarToken(text, 0));
+			}
 		}
 		
 		return pos;
@@ -106,11 +139,11 @@ public class Lexer {
 	 * passed as <code>pos</code> then no number was parsed.
 	 * @throws ParserException if the number ends with .
 	 */
-	private int tryParseNumber(String expression, int pos, Queue<Token> tokens) throws ParserException {
+	private int tryParseNumber(String expression, int pos, List<Token> tokens) throws LexerException {
 		StringBuilder buffer = new StringBuilder();
 		char digit = expression.charAt(pos);
 		
-		if ('0' <= digit && digit <= '9') {
+		if ('0' <= digit && digit <= '9' || digit == '-') {
 			buffer.append(digit);
 			
 			//reads the integer part
@@ -139,11 +172,11 @@ public class Lexer {
 			
 			String text = buffer.toString();
 			if (text.charAt(text.length() - 1) == '.')
-				throw new ParserException("Number can't finish with [.].");
+				throw new LexerException("Number can't finish with [.].");
 		
 			//append a new token to the list
 			double number = Double.parseDouble(buffer.toString());
-			tokens.add(new NumericToken(Token.Type.NUM, number));
+			tokens.add(new NumericToken(number));
 		}
 		
 		return pos;
@@ -153,7 +186,7 @@ public class Lexer {
 	 * Retuns a link of interpreted tokens
 	 * @return The list of interpreted tokens
 	 */
-	public Queue<Token> getList() {
+	public List<Token> getList() {
 		return this.tokens;
 	}
 	

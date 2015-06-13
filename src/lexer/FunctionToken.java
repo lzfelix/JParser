@@ -7,13 +7,17 @@ package lexer;
  */
 public class FunctionToken extends Token {
 	
-	//TODO: Get rid of this dependency!
 	public static enum FunctionID {sin, cos, tan, sec, csc, ctg, asin, acos, atan, sinh, cosh, tanh, ln}
 	
 	FunctionID functionID;
 	
-	public FunctionToken(Type type, FunctionID fID) {
-		super(type);
+	/**
+	 * Creates a token that represents a function. The suported functions are: sin, cos, tan, asin, acos,
+	 * atan, sec, csc, ctg, sinh, cosh, tanh, ln
+	 * @param fID the stored function's ID.
+	 */
+	public FunctionToken(FunctionID fID) {
+		super(Token.Type.FUN);
 		this.functionID = fID;
 	}
 	

@@ -1,15 +1,19 @@
 package lexer;
 
 /**
- * Holds numbers information (integer or double)
+ * Holds numbers information as a <code>double</code>.
  * 
  * @author Luiz Felix
  */
 public class NumericToken extends Token {
-	double number;
+	private double number;
 	
-	public NumericToken(Type type, double number) {
-		super(type);
+	/**
+	 * Creates a new token that holds a number in double form.
+	 * @param number The value to be stored
+	 */
+	public NumericToken(double number) {
+		super(Token.Type.NUM);
 		this.number = number;
 	}
 	

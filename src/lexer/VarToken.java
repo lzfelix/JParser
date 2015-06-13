@@ -4,20 +4,19 @@ package lexer;
  * Holds variables's name and value.
  * TODO: add value mapping
  * @author Luiz Felix
- * @version 0.01
  */
 public class VarToken extends Token {
-
 	String varName;
 	double value;
 	
-	public VarToken(Type type, String name) {
-		super(type);
-		this.varName = name;
-	}
-	
-	public VarToken(Type type, String name, double value) {
-		super(type);
+	/**
+	 * Maps a variable into a value
+	 * @param name The variable's name
+	 * @param value  The variable's value
+	 */
+	public VarToken(String name, double value) {
+		super(Token.Type.VAR);
+		
 		this.varName = name;
 		this.value = 0;
 	}

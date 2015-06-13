@@ -1,22 +1,47 @@
-package lexer;
+package parser;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
-public class Parser {
+import lexer.FunctionToken;
+import lexer.Lexer;
+import lexer.NumericToken;
+import lexer.Token;
+import exceptions.LexerException;
+import exceptions.ParserException;
+
+public class ShuntingYard {
 	private Lexer lexer;
 	private Queue<Token> output;
+	private static ShuntingYard instance;
+
+	private ShuntingYard() {
+		lexer = Lexer.getInstance();
+	}
 	
-	public Parser(String expression) throws ParserException {
-		lexer = new Lexer(expression);
+	/**
+	 * Returns the ShuntingYard instance, since this is a Singleton class.
+	 * @return
+	 */
+	public static ShuntingYard getInstance() {
+		if (instance == null)
+			instance = new ShuntingYard();
 		
-		Queue<Token> tokens = lexer.getList();
+		return instance;
+	}
+	
+	public void convertFromInfixToPosfix(String expression) throws ParserException, LexerException {
+		lexer = Lexer.getInstance();
+		lexer.parseToTokens(expression);
+		
+		List<Token> tokens = lexer.getList();
 		Stack<Token> operatorsStack = new Stack<>();
 		output = new LinkedList<Token>();
 		
-		while (!tokens.isEmpty()) {
-			Token current = tokens.poll();
+		for (int i = 0; i < tokens.size(); i++) {
+			Token current = tokens.get(i);
 			
 			//TODO: interpret variables
 			
@@ -40,6 +65,7 @@ public class Parser {
 				
 				//get rid of )
 				operatorsStack.pop();
+				transfer(operatorsStack);
 			}
 			
 			else {
@@ -77,6 +103,10 @@ public class Parser {
 		
 	}
 	
+	public Queue<Token> getExpression() {
+		return this.output;
+	}
+	
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
 		
@@ -84,17 +114,5 @@ public class Parser {
 			buffer.append(t.toString() + " ");
 		
 		return buffer.toString().substring(0, buffer.length() - 1);
-	}
-	
-	//There is a problem with functions!
-	public static void main(String args[]) {
-		Parser p;
-		
-		try {
-			p = new Parser("sin(cos(10+3/2))");
-			System.out.println(p.toString());
-		} catch (ParserException e) {
-			e.printStackTrace();
-		}
 	}
 }

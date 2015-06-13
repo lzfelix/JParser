@@ -1,4 +1,4 @@
-package lexer;
+package exceptions;
 
 @SuppressWarnings("serial")
 public class ParserException extends Exception {
