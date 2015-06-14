@@ -52,6 +52,7 @@ For multiple variables:
 ```
 
 Notice that the way that the parser operates can be changed during runtime.
+
 __ATTENTION__: `jp.setVariable(new double[]{5});` will allow parsing an expression with `x[0]` only, while `jp.setVariable(10);` will allow the use of `x` only.
 
 # Zero tunning
