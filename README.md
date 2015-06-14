@@ -28,7 +28,7 @@ For single variable expressions:
   JParser jp = JParser.getInstance();
   
   jp.setVariable(10);
-  jp.compileExpression("10^2");
+  jp.compileExpression("x^2");
   double result = jp.evaluate();  //result = 100
   
   jp.setVariable(2);
