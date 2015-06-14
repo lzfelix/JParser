@@ -18,12 +18,20 @@ public class StackParser {
 	Stack<Double> numbers;
 	Stack<Token> operators;
 	
+	/**
+	 * Used to verify if the number isn't to small to perform
+	 * a division. 
+	 */
+	public static double EPSILON = 1e-10;
+	
 	private static StackParser instance = null;
+	private double epsilon;
 	private double[] variablesVaue;
 	
 	private Queue<Token> compiledExpression;
 	
 	private StackParser() {
+		epsilon = EPSILON;
 		//creating a private constructor, so the Singleton pattern can be used
 	}
 	
@@ -31,7 +39,7 @@ public class StackParser {
 	 * Returns the StackParser's instance, since this is a Singleton class.
 	 * @return
 	 */
-	public StackParser getInstance() {
+	public static StackParser getInstance() {
 		if (instance == null) 
 			instance = new StackParser();
 		
@@ -169,12 +177,10 @@ public class StackParser {
 					op1 = tryPop();
 					op2 = tryPop();
 					
-					try {
-						numbers.push(op2 / op1);
-					}
-					catch (Exception e) { //Division by zero
-						throw new ParserException("Division by zero.");
-					}
+					if (Math.abs(op1) < this.epsilon)
+						throw new ParserException("Attempt to divide by zero.");
+					
+					numbers.push(op2 / op1);
 				break;
 				
 				case POS:
@@ -188,6 +194,10 @@ public class StackParser {
 				case POW:
 					op1 = tryPop();
 					op2 = tryPop();
+					
+					if (Math.abs(op1) < this.epsilon && Math.abs(op2) < this.epsilon)
+						throw new ParserException("Attempt to evaluate 0^0.");
+					
 					numbers.push(Math.pow(op2, op1));
 				break;
 	
@@ -199,9 +209,29 @@ public class StackParser {
 						case cos: numbers.push(Math.cos(tryPop())); break;
 						case tan: numbers.push(Math.tan(tryPop())); break;
 						
-						case sec: numbers.push(1 / Math.cos(tryPop())); break;
-						case csc: numbers.push(1 / Math.sin(tryPop())); break;
-						case ctg: numbers.push(1 / Math.tan(tryPop())); break;
+						case sec: 
+							op1 = Math.cos(tryPop());
+							
+							if (Math.abs(op1) < this.epsilon)
+								throw new ParserException("Attemp to divide by zero while calculating sec(x).");
+							numbers.push(1 / op1); 
+						break;
+						
+						case csc:
+							op1 = Math.sin(tryPop());
+							
+							if (Math.abs(op1) < this.epsilon)
+								throw new ParserException("Attemp to divide by zero while calculating csc(x).");
+							numbers.push(1 / op1);
+						break;
+						
+						case ctg:
+							op1 = Math.tan(tryPop());
+							
+							if (Math.abs(op1) < this.epsilon)
+								throw new ParserException("Attemp to divide by zero while calculating ctg(x).");
+							numbers.push(1 / op1);
+						break;
 						
 						case sinh: numbers.push(Math.sinh(tryPop())); break;
 						case cosh: numbers.push(Math.cosh(tryPop())); break;
@@ -211,7 +241,13 @@ public class StackParser {
 						case acos: numbers.push(Math.acos(tryPop())); break;
 						case atan: numbers.push(Math.atan(tryPop())); break;
 						
-						case ln: numbers.push(Math.log(tryPop())); break;
+						case ln:
+							op1 = tryPop();
+							if (op1 < this.epsilon)
+								throw new ParserException("Attemp to calculate ln(0).");
+							
+							numbers.push(Math.log(op1)); 
+						break;
 					}
 				break;
 					
@@ -239,6 +275,24 @@ public class StackParser {
 		}
 
 		return toReturn;
+	}
+	
+	/**
+	 * The division's denominator is compared to this number before perfoming a division,
+	 * so division by 0 errors are avoided. This procedure is also performed before evaluation
+	 * sec(x), csc(x) and its hiperbolic variations and ln(x).
+	 * The default value is the constant <code>EPSILON</code>
+	 * @param epsilon
+	 */
+	public void setEpsilon(double epsilon) {
+		this.epsilon = epsilon;
+	}
+	
+	/**
+	 * @return The threshold zero comparison value.
+	 */
+	public double getEpsilon() {
+		return this.epsilon;
 	}
 	
 	public static void main(String argsp[]) {
