@@ -1,21 +1,28 @@
 package parser;
 
+import java.util.EmptyStackException;
 import java.util.Queue;
 import java.util.Stack;
 
 import lexer.FunctionToken;
-import lexer.NumericToken;
+import lexer.IntegerToken;
+import lexer.Lexer;
+import lexer.DecimalToken;
 import lexer.Token;
+import lexer.VariableToken;
 import exceptions.LexerException;
 import exceptions.ParserException;
 
 public class StackParser {
 	Stack<Double> numbers;
 	Stack<Token> operators;
+	
 	private static StackParser instance = null;
+	private double[] variablesVaue;
+	
 	
 	private StackParser() {
-		//Making the constructor private to use Singleton
+		//creating a private constructor, so the Singleton pattern can be used
 	}
 	
 	/**
@@ -23,10 +30,21 @@ public class StackParser {
 	 * @return
 	 */
 	public StackParser getInstance() {
-		if (instance == null)
+		if (instance == null) 
 			instance = new StackParser();
 		
 		return instance;
+	}
+		
+	public void setVariable(double[] variablesVaue) {
+		this.variablesVaue = variablesVaue;
+		Lexer.getInstance().setAcceptVariables(true);
+		Lexer.getInstance().setMaxDimension(variablesVaue.length);
+	}
+	
+	public void setVariable(double value) {
+		this.variablesVaue = new double[] {value};
+		Lexer.getInstance().setAcceptVariables(true);
 	}
 	
 	public double parse(String expression) throws ParserException, LexerException {
@@ -39,12 +57,25 @@ public class StackParser {
 		numbers = new Stack<>();
 		
 		double op1, op2;
+		System.out.println(Lexer.getInstance());
 		
 		while (!queue.isEmpty()) {
 			Token element = queue.poll();
 			
 			switch (element.getType()) {
-				case NUM: numbers.push(((NumericToken)element).getValue()); break;
+				case NUM: 
+					if (element instanceof DecimalToken)
+						numbers.push(((DecimalToken)element).getValue());
+					else // can only be a IntegerToken
+						numbers.push((double) ((IntegerToken)element).getValue());
+						
+				break;
+				
+				case VAR:
+					int index = ((VariableToken)element).getIndex();
+					numbers.push(variablesVaue[index]);
+				break;
+					
 				
 				case ADD:
 					numbers.push(tryPop() + tryPop());
@@ -106,9 +137,6 @@ public class StackParser {
 						case ln: numbers.push(Math.log(tryPop())); break;
 					}
 				break;
-	
-				case VAR:
-				break;
 					
 				case COM: 
 					throw new ParserException("Commas are not allowed. Use '.' as decimal separator."); 
@@ -122,10 +150,15 @@ public class StackParser {
 	}
 	
 	private double tryPop() throws ParserException {
-		Double toReturn = numbers.pop();
-		if (toReturn == null)
-			throw new ParserException("Malformed expression.");
+		Double toReturn = null;
 		
+		try {
+			toReturn = numbers.pop();
+		}
+		catch (EmptyStackException e) {
+			throw new ParserException("Malformed expression.");
+		}
+
 		return toReturn;
 	}
 	
@@ -133,13 +166,13 @@ public class StackParser {
 		StackParser sp = new StackParser();
 		
 		try {
-			System.out.println(sp.parse("ln(e)"));
+			sp.setVariable(new double[]{2, 4});
+			System.out.println(sp.parse("x[0]^2 - x[1]"));
+//			System.out.println(sp.parse("ln(e-1+cos(2^2-4))*2^-1"));
 		} catch (ParserException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		} catch (LexerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 	}
 	

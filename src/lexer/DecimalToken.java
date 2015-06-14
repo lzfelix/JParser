@@ -5,14 +5,14 @@ package lexer;
  * 
  * @author Luiz Felix
  */
-public class NumericToken extends Token {
+public class DecimalToken extends Token {
 	private double number;
 	
 	/**
 	 * Creates a new token that holds a number in double form.
 	 * @param number The value to be stored
 	 */
-	public NumericToken(double number) {
+	public DecimalToken(double number) {
 		super(Token.Type.NUM);
 		this.number = number;
 	}

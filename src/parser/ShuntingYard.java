@@ -6,9 +6,11 @@ import java.util.Queue;
 import java.util.Stack;
 
 import lexer.FunctionToken;
+import lexer.IntegerToken;
 import lexer.Lexer;
-import lexer.NumericToken;
+import lexer.DecimalToken;
 import lexer.Token;
+import lexer.VariableToken;
 import exceptions.LexerException;
 import exceptions.ParserException;
 
@@ -43,9 +45,7 @@ public class ShuntingYard {
 		for (int i = 0; i < tokens.size(); i++) {
 			Token current = tokens.get(i);
 			
-			//TODO: interpret variables
-			
-			if (current instanceof NumericToken) 
+			if (current instanceof DecimalToken || current instanceof IntegerToken || current instanceof VariableToken)
 				output.add(current);
 			
 			else if (current instanceof FunctionToken)
@@ -73,8 +73,10 @@ public class ShuntingYard {
 				//just one argument, for now)
 				
 				while (operatorsStack.size() > 0) {
-					if ((operatorsStack.peek().getPriority() > current.getPriority() && current.getType() == Token.Type.POW) ||
-						(operatorsStack.peek().getPriority() >= current.getPriority() && current.getType() != Token.Type.POW)) {
+					if ((operatorsStack.peek().getPriority() > current.getPriority() && (current.getType() == Token.Type.POW
+							|| current.getType() == Token.Type.NEG)) ||
+						(operatorsStack.peek().getPriority() >= current.getPriority() && current.getType() != Token.Type.POW
+							&& current.getType() != Token.Type.NEG)) {
 						transfer(operatorsStack);
 					}
 					else break;
