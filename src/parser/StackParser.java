@@ -1,6 +1,7 @@
 package parser;
 
 import java.util.EmptyStackException;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -20,13 +21,14 @@ public class StackParser {
 	private static StackParser instance = null;
 	private double[] variablesVaue;
 	
+	private Queue<Token> compiledExpression;
 	
 	private StackParser() {
 		//creating a private constructor, so the Singleton pattern can be used
 	}
 	
 	/**
-	 * Retuns the StackParser's instance, since this is a Singleton class.
+	 * Returns the StackParser's instance, since this is a Singleton class.
 	 * @return
 	 */
 	public StackParser getInstance() {
@@ -36,31 +38,96 @@ public class StackParser {
 		return instance;
 	}
 		
+	/**
+	 * Set the values for which the variables in the form x[i].
+	 * After invoking this method, all the expressions to be parsed are allowed
+	 * to use indexed variables in the range [0-n[. To change this configuration,
+	 * invoke one of the forms of this method or <code>setConstantExpression()</code>,
+	 * to forbid the use of variables on future expressions.
+	 * If a scalar variable or an index out of bounds is found while parsing an 
+	 * expression that is expected to have indexed variables, a <code>LexerException</code> 
+	 * is thrown by the parsing method. To change this behavior, invoke either overload 
+	 * form of this method or <code>setConstantExpression</code>. 
+	 * 
+	 * @param variablesVaue The values for which x[0], x[1], ... x[n-1] are going
+	 * to be replaced in future expressions.
+	 */
 	public void setVariable(double[] variablesVaue) {
 		this.variablesVaue = variablesVaue;
 		Lexer.getInstance().setAcceptVariables(true);
 		Lexer.getInstance().setMaxDimension(variablesVaue.length);
 	}
 	
-	public void setVariable(double value) {
-		this.variablesVaue = new double[] {value};
+	/**
+	 * Set the value for which the scalar variable x will be replaced on evaluation time.
+	 * After invoking this method, all the future parsed expressions will be forbit to
+	 * have indexed variables, causing the parser to throw a <code>LexerException</code>.
+	 * To change this behavior, invoke either overload form of this method or 
+	 * <code>setConstantExpression</code>. 
+	 * 
+	 * @param variableValue The value for which x will be replaced in future expressions.
+	 */
+	public void setVariable(double variableValue) {
+		this.variablesVaue = new double[] {variableValue};
 		Lexer.getInstance().setAcceptVariables(true);
 	}
 	
-	public double parse(String expression) throws ParserException, LexerException {
+	/**
+	 * Forbids future expressions to accept any kind of variables. If this happens, then
+	 * a <code>LexerException will be thrown</code>. To change this behavior, invoke either
+	 * overload form of this method or <code>setConstantExpression</code>.   
+	 */
+	public void setConstantExpression() {
+		Lexer.getInstance().setAcceptVariables(false);
+	}
+
+	/**
+	 * PRE: Call this method BEFORE setting the variable's configuration through the <code>
+	 * setVariable()</code> and <code>setConstantExpression()</code> methods.
+	 * 
+	 * Parses and caches <code>expression</code> so if it has to be evaluated multiple times,
+	 * this can be done just changing the variables's values through <code>setVariable()</code>
+	 * and invoking <code>parse()</code>.
+	 * 
+	 * @param expression The expression to be evaluated. It can contain traditional operations 
+	 * (+,-,*,/,^ - power), functions (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, ln).
+	 * Parenthesed expressions will be properly evaluated.
+	 *  
+	 * @throws LexerException if the expression contains invalid function names, characters, 
+	 * or invalid variables, which are set through the <code>setVariable()</code> and 
+	 * <code>setConstantExpression()</code>, methods. 
+	 * 
+	 * @throws ParserException If the expression is malformed.
+	 */
+	public void compileExpression(String expression) throws LexerException, ParserException {
 		ShuntingYard s = ShuntingYard.getInstance();
-		
+
 		s.convertFromInfixToPosfix(expression);
-		Queue<Token> queue = s.getExpression();
+		this.compiledExpression = s.getExpression();
+	}
+	
+	/**
+	 * PRE: Invoke <code>compileExpression</code> before calling this method.
+	 * Given a compiled expression, parse its value based on the variable's value (if this
+	 * is the case).
+	 * 
+	 * @return The value which this expression corresponds to.
+	 * @throws ParserException if the expression is malformed or a illegal mathematical operation
+	 * is performed (such as 0^0, division by zero or log(x), x < 0).
+	 */
+	public double evaluate() throws ParserException {
+		if (compiledExpression == null)
+			throw new ParserException("There is no compiled expression to evaluate.");
+		
+		Queue<Token> workingStack = new LinkedList<Token>(compiledExpression);
 		
 		operators = new Stack<>();
 		numbers = new Stack<>();
 		
 		double op1, op2;
-		System.out.println(Lexer.getInstance());
 		
-		while (!queue.isEmpty()) {
-			Token element = queue.poll();
+		while (!workingStack.isEmpty()) {
+			Token element = workingStack.poll();
 			
 			switch (element.getType()) {
 				case NUM: 
@@ -73,7 +140,13 @@ public class StackParser {
 				
 				case VAR:
 					int index = ((VariableToken)element).getIndex();
-					numbers.push(variablesVaue[index]);
+					try {
+						numbers.push(variablesVaue[index]);
+					}
+					catch(Exception e) {
+						throw new ParserException("Variable x["+index+"] is not set. Did you change the variables"
+								+ "array to a smaller one?");
+					}
 				break;
 					
 				
@@ -103,7 +176,11 @@ public class StackParser {
 						throw new ParserException("Division by zero.");
 					}
 				break;
-					
+				
+				case POS:
+					//do nothing and avoid an exception 
+				break;
+				
 				case NEG: 
 					numbers.push(-tryPop()); 
 				break;
@@ -145,10 +222,12 @@ public class StackParser {
 					throw new ParserException("Unknown error.");
 			}
 		}
-		
+	
 		return tryPop();
 	}
 	
+	/* Tries to pop an element from the stack (because it may be empty). In this case
+	 * swap the EmptyStackException by a ParserException */
 	private double tryPop() throws ParserException {
 		Double toReturn = null;
 		
@@ -167,13 +246,28 @@ public class StackParser {
 		
 		try {
 			sp.setVariable(new double[]{2, 4});
-			System.out.println(sp.parse("x[0]^2 - x[1]"));
-//			System.out.println(sp.parse("ln(e-1+cos(2^2-4))*2^-1"));
+			sp.compileExpression("x[0]^2 - x[1]");
+			System.out.println(sp.evaluate());
+			
+			sp.setVariable(-2);
+			sp.compileExpression("x^2");
+			System.out.println(sp.evaluate());
+			
+			sp.setVariable(new double[]{3, 4});
+			System.out.println(sp.evaluate());
+			
+			sp.setVariable(2);
+			sp.compileExpression("ln(e-1+cos(2^2-4))*2^-1");
+			System.out.println(sp.evaluate());
+			
+			sp.setVariable(-2);
+			sp.compileExpression("-x");
+			System.out.println(sp.evaluate());
+			
 		} catch (ParserException e) {
 			System.out.println(e.getMessage());
 		} catch (LexerException e) {
 			System.out.println(e.getMessage());
 		}
 	}
-	
 }

@@ -79,10 +79,18 @@ public class Lexer {
 			this.maxDimension = maxDimension;
 	}
 	
+	/**
+	 * @return Return the max allowed index of x.
+	 */
 	public int getMaxDimension() {
 		return this.maxDimension;
 	}
 	
+	/**
+	 * Converts and infix expression into a series of tokens (still on infix notation)
+	 * @param expression The expression to be parsed
+	 * @throws LexerException If there are invalid variable names or functions.
+	 */
 	public void parseToTokens(String expression) throws LexerException {
 		//resets from previous lexing
 		int pos = -1;
@@ -102,13 +110,20 @@ public class Lexer {
 				continue;
 			}
 			
+			//treating operators case
 			switch (digit) {
-				//treating operators case
-				case ADD: tokens.add(new Token(Token.Type.ADD)); continue;
+			
+				//this can be either a positive sign or an addition operator
+				case ADD:
+					if (tokens.size() == 0 || Token.isSignal(tokens.get(tokens.size() - 1)))
+						tokens.add(new Token(Token.Type.POS));
+					else
+						tokens.add(new Token(Token.Type.ADD)); 
+				continue;
 				
-				//this can be either a negative sign or subtraction operator
+				//this can be either a negative sign or a subtraction operator
 				case SUB:
-					if (tokens.size() == 0 || Token.willNegate(tokens.get(tokens.size() - 1)))
+					if (tokens.size() == 0 || Token.isSignal(tokens.get(tokens.size() - 1)))
 						tokens.add(new Token(Token.Type.NEG));
 					else
 						tokens.add(new Token(Token.Type.SUB)); 
