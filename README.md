@@ -1,6 +1,6 @@
 # JParser
 
-This is a math parser and evaluator written in Java. It accepts either constant expressions, for example `3+5*2`, expressions using a single scalar variable, such as `3*x-4/x` and multiple variables expressions in the form `x[1]^x[2]/3-5*x[4]`. This parser also also accepts trigonometric functions and the constants `pi` and `e`. The parser also support signs, so the expression `+2-(--5)` is valid.
+This is a math parser and evaluator written in Java. It accepts either constant expressions, for example `3+5*2`, expressions using a single scalar variable, such as `3*x-4/x` and multiple variables expressions in the form `x[0]^x[1]/3-5*x[2]`. This parser also also accepts trigonometric functions and the constants `pi` and `e`. The parser also support signs, so the expression `+2-(--5)` is valid.
 
 This API inteprets a function in two phases: initially it is compilled into RPN notation using Dijkstra's Shunting-Yard algorithm and then it is evaluated based on the variables's value. This can be useful when the same expression must be evaluated multiple times with different values, as happens when implementing Numerical Methods. In this situation, the expression doesn't need to be parsed again, since it is already cached.
 
@@ -35,7 +35,7 @@ For single variable expressions:
   result = jp.evaluate();  //result = 4
   
   jp.setVariable(e);
-  jp.compileExpression("ln(e)/2");
+  jp.compileExpression("ln(x)/2");
   result = jp.evaluate();  //result = 0.5
 ```
 
