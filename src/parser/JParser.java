@@ -14,7 +14,7 @@ import lexer.VariableToken;
 import exceptions.LexerException;
 import exceptions.ParserException;
 
-public class StackParser {
+public class JParser {
 	Stack<Double> numbers;
 	Stack<Token> operators;
 	
@@ -24,13 +24,13 @@ public class StackParser {
 	 */
 	public static double EPSILON = 1e-10;
 	
-	private static StackParser instance = null;
+	private static JParser instance = null;
 	private double epsilon;
 	private double[] variablesVaue;
 	
 	private Queue<Token> compiledExpression;
 	
-	private StackParser() {
+	private JParser() {
 		epsilon = EPSILON;
 		//creating a private constructor, so the Singleton pattern can be used
 	}
@@ -39,9 +39,9 @@ public class StackParser {
 	 * Returns the StackParser's instance, since this is a Singleton class.
 	 * @return
 	 */
-	public static StackParser getInstance() {
+	public static JParser getInstance() {
 		if (instance == null) 
-			instance = new StackParser();
+			instance = new JParser();
 		
 		return instance;
 	}
@@ -293,35 +293,5 @@ public class StackParser {
 	 */
 	public double getEpsilon() {
 		return this.epsilon;
-	}
-	
-	public static void main(String argsp[]) {
-		StackParser sp = new StackParser();
-		
-		try {
-			sp.setVariable(new double[]{2, 4});
-			sp.compileExpression("x[0]^2 - x[1]");
-			System.out.println(sp.evaluate());
-			
-			sp.setVariable(-2);
-			sp.compileExpression("x^2");
-			System.out.println(sp.evaluate());
-			
-			sp.setVariable(new double[]{3, 4});
-			System.out.println(sp.evaluate());
-			
-			sp.setVariable(2);
-			sp.compileExpression("ln(e-1+cos(2^2-4))*2^-1");
-			System.out.println(sp.evaluate());
-			
-			sp.setVariable(-2);
-			sp.compileExpression("-x");
-			System.out.println(sp.evaluate());
-			
-		} catch (ParserException e) {
-			System.out.println(e.getMessage());
-		} catch (LexerException e) {
-			System.out.println(e.getMessage());
-		}
 	}
 }

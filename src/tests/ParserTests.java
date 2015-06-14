@@ -5,18 +5,18 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import parser.StackParser;
+import parser.JParser;
 import exceptions.LexerException;
 import exceptions.ParserException;
 
 public class ParserTests {
 	private static double DELTA = 1e-5;
 	
-	StackParser parser;
+	JParser parser;
 	
 	@Before
 	public void setUp() throws Exception {
-		parser = StackParser.getInstance();
+		parser = JParser.getInstance();
 	}
 
 	@Test public void simpleAddition() throws LexerException, ParserException {
