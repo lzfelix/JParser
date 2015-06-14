@@ -61,7 +61,7 @@ The parser keeps track of the operands values to prevent illegal mathematical op
 This control is done through comparing the operand's absolute value to `epsilon`. The default value of this parameter is `1e-10` and it is stored on the constant `EPSILON`, but it can be changed according to the user's needs by calling `getEpsilon()` method.
 
 # Testing
-I developed some testing using JUnit, these can be found in the `tests` package, but for usage this package is not needed. To run theses tests you'll need both JUnit and Hamcrest (which are included on the project).
+I developed some testing using JUnit, these can be found in the `tests` package, but for usage this package is not needed. To run these tests you'll need both JUnit and Hamcrest (which are included on the project).
 
 #License
 This software is provided under the MIT license.
