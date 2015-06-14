@@ -5,7 +5,7 @@ This is a math parser and evaluator written in Java. It accepts either constant 
 This API inteprets a function in two phases: initially it is compilled into RPN notation using Dijkstra's Shunting-Yard algorithm and then it is evaluated based on the variables's value. This can be useful when the same expression must be evaluated multiple times with different values, as happens when implementing Numerical Methods. In this situation, the expression doesn't need to be parsed again, since it is already cached.
 
 # Suported Features
-* The standard operations `+`, `-`, `*`, `/`, `^`, respecting precedence order'
+* The standard operations `+`, `-`, `*`, `/`, `^`, respecting precedence order;
 * Correctly parenthised expressions and signs;
 * Trigonometric functions: sin(x), cos(x), tan(x), sec(x), csc(x), ctg(x), asin(x), acos(x), atan(x), sinh(x), cosh(x), tanh(x);
 * ln(x);
@@ -19,7 +19,7 @@ For constant expressions:
   JParser jp = JParser.getInstance();
   
   jp.setConstantExpression();
-  jp.compileExpression("5+3*cos(ln(e) - 1));
+  jp.compileExpression("5+3*cos(ln(e) - 1)");
   double result = jp.evaluate();  //result = 8
 ```
 
