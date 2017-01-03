@@ -63,5 +63,10 @@ This control is done through comparing the operand's absolute value to `epsilon`
 # Testing
 I developed some testing using JUnit, these can be found in the `tests` package, but for usage this package is not needed. To run these tests you'll need both JUnit and Hamcrest (which are included on the project).
 
+#Developed by
+Luiz Felix, as matter of fact :)
+
+lzcfelix [at] gmail [dot] com
+
 #License
 This software is provided under the MIT license.
